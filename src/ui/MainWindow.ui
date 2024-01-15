@@ -25,7 +25,7 @@
    <enum>Qt::StrongFocus</enum>
   </property>
   <property name="windowTitle">
-   <string>PointCloudViewer 0.01</string>
+   <string>PointCloudViewer 0.0.1</string>
   </property>
   <property name="locale">
    <locale language="English" country="UnitedStates"/>
