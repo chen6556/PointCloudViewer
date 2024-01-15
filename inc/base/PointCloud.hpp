@@ -23,6 +23,6 @@ struct PointCloud
     std::vector<float> data;
 };
 
-
+const static float PI = 3.1415927f;
 
 };

@@ -12,15 +12,19 @@ class Viewer : public QOpenGLWidget, protected QOpenGLFunctions_4_5_Core
 
 private:
     size_t _data_count = 0;
-    float _uniforms[6];
+    int _uniforms[6];
     unsigned int _VAO, _VBO;
     
-    float _ctm[16] = {1.0f, 0.0f, 0.0f, 0.0f,
+    float _ctm0[16] = {1.0f, 0.0f, 0.0f, 0.0f,
                       0.0f, 1.0f, 0.0f, 0.0f,
                       0.0f, 0.0f, 1.0f, 0.0f,
                       0.0f, 0.0f, 0.0f, 1.0f};
-    
-    float _ratio = 1.0f;
+    float _ctm1[16] = {1.0f, 0.0f, 0.0f, 0.0f,
+                      0.0f, 1.0f, 0.0f, 0.0f,
+                      0.0f, 0.0f, 1.0f, 0.0f,
+                      0.0f, 0.0f, 0.0f, 1.0f};
+
+    float _ratio = 1.0f, _FOV = 90.0f;
     float _viewer_width = 0, _viewer_height = 0;
     PointCloud::PointCloudSize _pd_size;
 

@@ -67,12 +67,12 @@ void Viewer::initializeGL()
     glGenBuffers(1, &_VBO);
 
     glBindVertexArray(_VAO);
-    glVertexAttribLFormat(0, 6, GL_FLOAT, 0);
+    glVertexAttribFormat(0, 6, GL_FLOAT, GL_FALSE, 0);
 
     glBindBuffer(GL_ARRAY_BUFFER, _VBO);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), NULL);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3* sizeof(float)));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 }
 
@@ -82,10 +82,17 @@ void Viewer::resizeGL(int w, int h)
     glUniform1i(_uniforms[1], h / 2); // h
     glViewport(0, 0, w, h);
 
-    _ctm[0] *= (_viewer_width / _viewer_height);
-    _ctm[5] += (h - _viewer_height);
-    glUniform4f(_uniforms[2], _ctm[0], _ctm[1], _ctm[2], _ctm[3]); // row0
-    glUniform4f(_uniforms[3], _ctm[4], _ctm[5], _ctm[6], _ctm[7]); // row1
+    float v = std::tanf(PointCloud::PI * _FOV / 360);
+    _ctm0[0] = h / (w * v);
+    _ctm0[5] = 1.0f / v;
+    _ctm0[10] = -1.0f;
+    _ctm0[14] = -1.0f;
+    _ctm0[15] = 1.0f;
+
+    glUniform4f(_uniforms[2], _ctm0[0], _ctm0[1], _ctm0[2], _ctm0[3]); // row0
+    glUniform4f(_uniforms[3], _ctm0[4], _ctm0[5], _ctm0[6], _ctm0[7]); // row1
+    glUniform4f(_uniforms[4], _ctm0[8], _ctm0[9], _ctm0[10], _ctm0[11]); // row2
+    glUniform4f(_uniforms[5], _ctm0[12], _ctm0[13], _ctm0[14], _ctm0[15]); // row3
 
     _viewer_width = w, _viewer_height = h;
 }
@@ -114,7 +121,32 @@ void Viewer::mouseMoveEvent(QMouseEvent *event)
 
 void Viewer::wheelEvent(QWheelEvent *event)
 {
-    
+    if (event->angleDelta().y() > 0)
+    {
+        _ratio *= 1.25;
+        _FOV *= 0.8;
+    }
+    else if (event->angleDelta().y() < 0)
+    {
+        _ratio *= 0.8;
+        _FOV *= 1.25;
+    }
+
+    float v = std::tanf(PointCloud::PI * _FOV / 360);
+    _ctm0[0] = _viewer_height / (_viewer_width * v);
+    _ctm0[5] = 1.0f / v * _ratio;
+    _ctm0[10] = -1.0f * _ratio;
+    _ctm0[14] = -1.0f;
+    _ctm0[15] = 1.0f;
+
+    makeCurrent();
+    glUniform4f(_uniforms[2], _ctm0[0], _ctm0[1], _ctm0[2], _ctm0[3]); // row0
+    glUniform4f(_uniforms[3], _ctm0[4], _ctm0[5], _ctm0[6], _ctm0[7]); // row1
+    glUniform4f(_uniforms[4], _ctm0[8], _ctm0[9], _ctm0[10], _ctm0[11]); // row2
+    glUniform4f(_uniforms[5], _ctm0[12], _ctm0[13], _ctm0[14], _ctm0[15]); // row3
+    doneCurrent();
+
+    update();
 }
 
 
@@ -125,18 +157,24 @@ void Viewer::load_data(const PointCloud::PointCloud &pd)
         return;
     }
 
-    _data_count = pd.data.size();
+    _data_count = pd.data.size() / 6;
     _pd_size = pd.size;
+
+    float v = std::tanf(PointCloud::PI * _FOV / 360);
+    _ctm0[0] = _viewer_height / (_viewer_width * v);
+    _ctm0[5] = 1.0f / v;
+    _ctm0[10] = -1.0f;
+    _ctm0[14] = -1.0f;
 
     makeCurrent();
 
     glBindBuffer(GL_ARRAY_BUFFER, _VBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * _data_count, &pd.data.front(), GL_STATIC_DRAW);
 
-    glUniform4f(_uniforms[2], 1.0f, 0.0f, 0.0f, 0.0f); // row0
-    glUniform4f(_uniforms[3], 0.0f, 1.0f, 0.0f, 0.0f); // row1
-    glUniform4f(_uniforms[4], 0.0f, 0.0f, 1.0f, 0.0f); // row2
-    glUniform4f(_uniforms[5], 0.0f, 0.0f, 0.0f, 1.0f); // row3
+    glUniform4f(_uniforms[2], _ctm0[0], _ctm0[1], _ctm0[2], _ctm0[3]); // row0
+    glUniform4f(_uniforms[3], _ctm0[4], _ctm0[5], _ctm0[6], _ctm0[7]); // row1
+    glUniform4f(_uniforms[4], _ctm0[8], _ctm0[9], _ctm0[10], _ctm0[11]); // row2
+    glUniform4f(_uniforms[5], _ctm0[12], _ctm0[13], _ctm0[14], _ctm0[15]); // row3
 
     doneCurrent();
 }
