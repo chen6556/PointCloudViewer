@@ -28,6 +28,8 @@ private:
     float _viewer_width = 0, _viewer_height = 0;
     PointCloud::PointCloudSize _pd_size;
 
+    bool _rotate = false, _move = false;
+
 private:
     void init();
 

@@ -32,12 +32,15 @@ void Importer::row()
         break;
     }
 
-    _min_x = std::min(_cache[0], _min_x);
-    _max_x = std::max(_cache[0], _max_x);
-    _min_y = std::min(_cache[1], _min_y);
-    _max_y = std::max(_cache[1], _max_y);
-    _min_z = std::min(_cache[2], _min_z);
-    _max_z = std::max(_cache[2], _max_z);
+    if (_cache.size() >= 3)
+    {
+        _min_x = std::min(_cache[0], _min_x);
+        _max_x = std::max(_cache[0], _max_x);
+        _min_y = std::min(_cache[1], _min_y);
+        _max_y = std::max(_cache[1], _max_y);
+        _min_z = std::min(_cache[2], _min_z);
+        _max_z = std::max(_cache[2], _max_z);
+    }
 
     _cache.clear();
 }
