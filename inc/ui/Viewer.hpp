@@ -29,6 +29,7 @@ private:
     PointCloud::PointCloudSize _pd_size;
 
     bool _rotate = false, _move = false;
+    QPoint _pos;
 
 private:
     void init();

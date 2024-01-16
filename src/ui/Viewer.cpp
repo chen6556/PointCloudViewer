@@ -1,5 +1,6 @@
 #include "ui/Viewer.hpp"
 #include "ui/GLSL.hpp"
+#include "base/Utils.hpp"
 
 
 Viewer::Viewer(QWidget *parent)
@@ -51,16 +52,12 @@ void Viewer::initializeGL()
 
     glDeleteShader(vertex_shader);
     _uniforms[0] = glGetUniformLocation(shader_program, "size");
-    _uniforms[1] = glGetUniformLocation(shader_program, "row0");
-    _uniforms[2] = glGetUniformLocation(shader_program, "row1");
-    _uniforms[3] = glGetUniformLocation(shader_program, "row2");
-    _uniforms[4] = glGetUniformLocation(shader_program, "row3");
+    _uniforms[1] = glGetUniformLocation(shader_program, "projection");
+    _uniforms[2] = glGetUniformLocation(shader_program, "model");
 
     glUseProgram(shader_program);
-    glUniform4f(_uniforms[1], 1.0f, 0.0f, 0.0f, 0.0f); // row0
-    glUniform4f(_uniforms[2], 0.0f, 1.0f, 0.0f, 0.0f); // row1
-    glUniform4f(_uniforms[3], 0.0f, 0.0f, 1.0f, 0.0f); // row2
-    glUniform4f(_uniforms[4], 0.0f, 0.0f, 0.0f, 1.0f); // row3
+    glUniformMatrix4fv(_uniforms[1], 1, GL_TRUE, _ctm0); // projection
+    glUniformMatrix4fv(_uniforms[2], 1, GL_TRUE, _ctm1); // model
 
     glGenVertexArrays(1, &_VAO);
     glGenBuffers(1, &_VBO);
@@ -87,10 +84,7 @@ void Viewer::resizeGL(int w, int h)
     _ctm0[14] = -1.0f;
     _ctm0[15] = 1.0f;
 
-    glUniform4f(_uniforms[1], _ctm0[0], _ctm0[1], _ctm0[2], _ctm0[3]); // row0
-    glUniform4f(_uniforms[2], _ctm0[4], _ctm0[5], _ctm0[6], _ctm0[7]); // row1
-    glUniform4f(_uniforms[3], _ctm0[8], _ctm0[9], _ctm0[10], _ctm0[11]); // row2
-    glUniform4f(_uniforms[4], _ctm0[12], _ctm0[13], _ctm0[14], _ctm0[15]); // row3
+    glUniformMatrix4fv(_uniforms[1], 1, GL_TRUE, _ctm0); // projection
 
     _viewer_width = w, _viewer_height = h;
 }
@@ -117,6 +111,7 @@ void Viewer::mousePressEvent(QMouseEvent *event)
     default:
         break;
     }
+    _pos = event->pos();
 }
 
 void Viewer::mouseReleaseEvent(QMouseEvent *event)
@@ -138,14 +133,42 @@ void Viewer::mouseReleaseEvent(QMouseEvent *event)
 
 void Viewer::mouseMoveEvent(QMouseEvent *event)
 {
+    const QPoint pos = event->pos();
     if (_rotate)
     {
-
+        int y_dir = pos.x() > _pos.x() ? 1 : -1;
+        int x_dir = pos.y() < _pos.y() ? 1 : -1;
+        float mat_x[16] = { 1.0f, 0.0f, 0.0f, 0.0f,
+            0.0f, std::cosf(x_dir * PointCloud::PI / 180), -std::sinf(x_dir * PointCloud::PI / 180), 0.0f,
+            0.0f, std::sinf(x_dir * PointCloud::PI / 180), std::cosf(x_dir * PointCloud::PI / 180), 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f },
+            mat_y[16] = { std::cosf(y_dir * PointCloud::PI / 180), 0.0f, std::sinf(y_dir * PointCloud::PI / 180), 0.0f,
+                0.0f, 1.0f, 0.0f, 0.0f,
+                -std::sinf(y_dir * PointCloud::PI / 180), 0.0f, std::cosf(y_dir * PointCloud::PI / 180), 0.0f,
+                0.0f, 0.0f, 0.0f, 1.0f };
+        float mat0[16], mat1[16];
+        Utils::mul<4>(mat_x, mat_y, mat0);
+        std::memmove(mat1, _ctm1, 16 * sizeof(float));
+        Utils::mul<4>(mat0, mat1, _ctm1);
     }
     else if (_move)
     {
-        
+        float x_dir = pos.x() > _pos.x() ? 0.0001f : -0.0001f;
+        float y_dir = pos.y() < _pos.y() ? 0.0001f : -0.0001f;
+        float mat0[16] = { 1.0f, 0.0f, 0.0f, x_dir,
+                           0.0f, 1.0f, 0.0f, y_dir,
+                           0.0f, 0.0f, 1.0f, 0.0f,
+                           0.0f, 0.0f, 0.0f, 1.0f };
+        float mat1[16];
+        std::memmove(mat1, _ctm1, 16 * sizeof(float));
+        Utils::mul<4>(mat0, mat1, _ctm1);
     }
+
+    makeCurrent();
+    glUniformMatrix4fv(_uniforms[2], 1, GL_TRUE, _ctm1); // model
+    doneCurrent();
+
+    update();
 }
 
 void Viewer::wheelEvent(QWheelEvent *event)
@@ -169,10 +192,7 @@ void Viewer::wheelEvent(QWheelEvent *event)
     _ctm0[15] = 1.0f;
 
     makeCurrent();
-    glUniform4f(_uniforms[1], _ctm0[0], _ctm0[1], _ctm0[2], _ctm0[3]); // row0
-    glUniform4f(_uniforms[2], _ctm0[4], _ctm0[5], _ctm0[6], _ctm0[7]); // row1
-    glUniform4f(_uniforms[3], _ctm0[8], _ctm0[9], _ctm0[10], _ctm0[11]); // row2
-    glUniform4f(_uniforms[4], _ctm0[12], _ctm0[13], _ctm0[14], _ctm0[15]); // row3
+    glUniformMatrix4fv(_uniforms[1], 1, GL_TRUE, _ctm0); // projection
     doneCurrent();
 
     update();
@@ -201,10 +221,7 @@ void Viewer::load_data(const PointCloud::PointCloud &pd)
 	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * _data_count, &pd.data.front(), GL_STATIC_DRAW);
 
     glUniform3f(_uniforms[0], _viewer_width / 2, _viewer_height / 2, 1.74 * _pd_size.len); // size
-    glUniform4f(_uniforms[1], _ctm0[0], _ctm0[1], _ctm0[2], _ctm0[3]); // row0
-    glUniform4f(_uniforms[2], _ctm0[4], _ctm0[5], _ctm0[6], _ctm0[7]); // row1
-    glUniform4f(_uniforms[3], _ctm0[8], _ctm0[9], _ctm0[10], _ctm0[11]); // row2
-    glUniform4f(_uniforms[4], _ctm0[12], _ctm0[13], _ctm0[14], _ctm0[15]); // row3
+    glUniformMatrix4fv(_uniforms[1], 1, GL_TRUE, _ctm0); // projection
 
     doneCurrent();
 }
