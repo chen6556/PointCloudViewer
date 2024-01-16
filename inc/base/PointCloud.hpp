@@ -21,6 +21,8 @@ struct PointCloud
 {
     PointCloudSize size;
     std::vector<float> data;
+    std::vector<unsigned int> surface;
+    std::vector<unsigned int> edge;
 };
 
 const static float PI = 3.1415927f;

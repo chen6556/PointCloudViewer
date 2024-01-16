@@ -24,6 +24,10 @@ void MainWindow::init()
     setAcceptDrops(true);
 
     ui->horizontalLayout->addWidget(_viewer);
+
+    QObject::connect(ui->actionshow_point, &QAction::triggered, _viewer, &Viewer::set_show_point);
+    QObject::connect(ui->actionshow_surface, &QAction::triggered, _viewer, &Viewer::set_show_surface);
+    QObject::connect(ui->actionshow_edge, &QAction::triggered, _viewer, &Viewer::set_show_edge);
 }
 
 

@@ -14,6 +14,8 @@ private:
     size_t _data_count = 0;
     int _uniforms[6];
     unsigned int _VAO, _VBO;
+    unsigned int _IBO[2]; // surface edge
+    size_t _surface_count = 0, _edge_count = 0;
     
     float _ctm0[16] = {1.0f, 0.0f, 0.0f, 0.0f,
                       0.0f, 1.0f, 0.0f, 0.0f,
@@ -28,6 +30,7 @@ private:
     float _viewer_width = 0, _viewer_height = 0;
     PointCloud::PointCloudSize _pd_size;
 
+    bool _show_point = true, _show_surface = false, _show_edge = false;
     bool _rotate = false, _move = false;
     QPoint _pos;
 
@@ -55,5 +58,11 @@ public:
 
     void load_data(const PointCloud::PointCloud &pd);
 
+public slots:
 
+    void set_show_point(const bool value);
+
+    void set_show_surface(const bool value);
+
+    void set_show_edge(const bool value);
 };

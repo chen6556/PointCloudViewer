@@ -36,6 +36,8 @@ void Viewer::initializeGL()
     glEnable(GL_PRIMITIVE_RESTART_FIXED_INDEX);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
 
     vertex_shader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertex_shader, 1, &GLSL::base_vss, NULL);
@@ -61,6 +63,7 @@ void Viewer::initializeGL()
 
     glGenVertexArrays(1, &_VAO);
     glGenBuffers(1, &_VBO);
+    glGenBuffers(2, _IBO);
 
     glBindVertexArray(_VAO);
     glVertexAttribFormat(0, 6, GL_FLOAT, GL_FALSE, 0);
@@ -93,7 +96,21 @@ void Viewer::paintGL()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-    glDrawArrays(GL_POINTS, 0, _data_count);
+    if (_show_point)
+    {
+        glDrawArrays(GL_POINTS, 0, _data_count);
+    }
+
+    if (_show_surface && _surface_count > 0)
+    {
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _IBO[0]); // surface
+        glDrawElements(GL_POLYGON, _surface_count, GL_UNSIGNED_INT, NULL);
+    }
+    if (_show_edge && _edge_count > 0)
+    {
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _IBO[1]); // edge
+        glDrawElements(GL_LINE_LOOP, _edge_count, GL_UNSIGNED_INT, NULL);
+    }
 }
 
 void Viewer::mousePressEvent(QMouseEvent *event)
@@ -208,6 +225,8 @@ void Viewer::load_data(const PointCloud::PointCloud &pd)
     }
 
     _data_count = pd.data.size() / 6;
+    _surface_count = pd.surface.size();
+    _edge_count = pd.edge.size();
     _pd_size = pd.size;
 
     float v = std::tanf(PointCloud::PI * _FOV / 360);
@@ -218,11 +237,46 @@ void Viewer::load_data(const PointCloud::PointCloud &pd)
 
     makeCurrent();
 
-    glBindBuffer(GL_ARRAY_BUFFER, _VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, _VBO); // point
 	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * pd.data.size(), &pd.data.front(), GL_STATIC_DRAW);
+
+    if (_surface_count > 0)
+    {
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _IBO[0]); // surface
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * pd.surface.size(), &pd.surface.front(), GL_STATIC_DRAW);
+    }
+
+    if (_edge_count > 0)
+    {
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _IBO[1]); // edge
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * pd.edge.size(), &pd.edge.front(), GL_STATIC_DRAW);
+    }
 
     glUniform3f(_uniforms[0], _viewer_width / 2, _viewer_height / 2, 1.74 * _pd_size.len); // size
     glUniformMatrix4fv(_uniforms[1], 1, GL_TRUE, _ctm0); // projection
 
     doneCurrent();
 }
+
+
+
+
+void Viewer::set_show_point(const bool value)
+{
+    _show_point = value;
+    update();
+}
+
+void Viewer::set_show_surface(const bool value)
+{
+    _show_surface = value;
+    update();
+}
+
+void Viewer::set_show_edge(const bool value)
+{
+    _show_edge = value;
+    update();
+}
+
+

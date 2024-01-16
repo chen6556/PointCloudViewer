@@ -273,7 +273,7 @@ struct Parser<double>
                     find_point = true;
                 }
             }
-            if (index < stream.length() && (stream[index] == 'e' || stream[index] == 'E'))
+            if (index < stream.length() && !num.empty() && (stream[index] == 'e' || stream[index] == 'E'))
             {
                 num.emplace_back(stream[index++]);
                 if (index < stream.length() && stream[index] == '-')
@@ -284,7 +284,7 @@ struct Parser<double>
                 {
                     num.emplace_back(stream[index++]);
                 }
-                while (num.back() < '0' || num.back() > '9')
+                while (!num.empty() && (num.back() < '0' || num.back() > '9'))
                 {
                     num.pop_back();
                     --index;
@@ -767,7 +767,7 @@ inline Parser<char> alphab_p()
     return Parser<char>(std::function<std::optional<char>(std::string_view &)>(
         [=](std::string_view &stream) -> std::optional<char>
         {
-            if (!stream.empty() && 'a' <= stream.front() && stream.front() <= 'b')
+            if (!stream.empty() && 'a' <= stream.front() && stream.front() <= 'z')
             {
                 const char ch = stream.front();
                 stream.remove_prefix(1);

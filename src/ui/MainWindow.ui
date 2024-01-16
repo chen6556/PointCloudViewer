@@ -54,7 +54,16 @@
     </property>
     <addaction name="open_file"/>
    </widget>
+   <widget class="QMenu" name="menusetting">
+    <property name="title">
+     <string>setting</string>
+    </property>
+    <addaction name="actionshow_point"/>
+    <addaction name="actionshow_surface"/>
+    <addaction name="actionshow_edge"/>
+   </widget>
    <addaction name="file_menu"/>
+   <addaction name="menusetting"/>
   </widget>
   <widget class="QStatusBar" name="statusBar">
    <property name="font">
@@ -133,6 +142,33 @@
    </property>
    <property name="text">
     <string>show origin</string>
+   </property>
+  </action>
+  <action name="actionshow_point">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>show point</string>
+   </property>
+  </action>
+  <action name="actionshow_surface">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>show surface</string>
+   </property>
+  </action>
+  <action name="actionshow_edge">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>show edge</string>
    </property>
   </action>
  </widget>
