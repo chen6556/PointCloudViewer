@@ -273,6 +273,22 @@ struct Parser<double>
                     find_point = true;
                 }
             }
+            if (stream[index] == 'e' || stream[index] == 'E')
+            {
+                num.emplace_back(stream[index]);
+                if (stream[++index] == '-')
+                {
+                    num.emplace_back(stream[index++]);
+                }
+                while (index < stream.length() && ('0' <= stream[index] && stream[index] <= '9'))
+                {
+                    num.emplace_back(stream[index]);
+                    if (stream[index++] == '.')
+                    {
+                        find_point = true;
+                    }
+                }
+            }
             if (num.empty())
             {
                 return std::nullopt;

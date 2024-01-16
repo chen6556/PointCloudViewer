@@ -66,7 +66,7 @@ void Viewer::initializeGL()
     glVertexAttribFormat(0, 6, GL_FLOAT, GL_FALSE, 0);
 
     glBindBuffer(GL_ARRAY_BUFFER, _VBO);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), NULL);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), NULL);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
@@ -137,7 +137,7 @@ void Viewer::mouseMoveEvent(QMouseEvent *event)
     if (_rotate)
     {
         int y_dir = pos.x() > _pos.x() ? 1 : -1;
-        int x_dir = pos.y() < _pos.y() ? 1 : -1;
+        int x_dir = pos.y() > _pos.y() ? 1 : -1;
         float mat_x[16] = { 1.0f, 0.0f, 0.0f, 0.0f,
             0.0f, std::cosf(x_dir * PointCloud::PI / 180), -std::sinf(x_dir * PointCloud::PI / 180), 0.0f,
             0.0f, std::sinf(x_dir * PointCloud::PI / 180), std::cosf(x_dir * PointCloud::PI / 180), 0.0f,
@@ -153,8 +153,8 @@ void Viewer::mouseMoveEvent(QMouseEvent *event)
     }
     else if (_move)
     {
-        float x_dir = pos.x() > _pos.x() ? 0.0001f : -0.0001f;
-        float y_dir = pos.y() < _pos.y() ? 0.0001f : -0.0001f;
+        float x_dir = pos.x() > _pos.x() ? 0.001f : -0.001f;
+        float y_dir = pos.y() < _pos.y() ? 0.001f : -0.001f;
         float mat0[16] = { 1.0f, 0.0f, 0.0f, x_dir,
                            0.0f, 1.0f, 0.0f, y_dir,
                            0.0f, 0.0f, 1.0f, 0.0f,
@@ -163,6 +163,7 @@ void Viewer::mouseMoveEvent(QMouseEvent *event)
         std::memmove(mat1, _ctm1, 16 * sizeof(float));
         Utils::mul<4>(mat0, mat1, _ctm1);
     }
+    _pos = pos;
 
     makeCurrent();
     glUniformMatrix4fv(_uniforms[2], 1, GL_TRUE, _ctm1); // model
@@ -218,7 +219,7 @@ void Viewer::load_data(const PointCloud::PointCloud &pd)
     makeCurrent();
 
     glBindBuffer(GL_ARRAY_BUFFER, _VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * _data_count, &pd.data.front(), GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * pd.data.size(), &pd.data.front(), GL_STATIC_DRAW);
 
     glUniform3f(_uniforms[0], _viewer_width / 2, _viewer_height / 2, 1.74 * _pd_size.len); // size
     glUniformMatrix4fv(_uniforms[1], 1, GL_TRUE, _ctm0); // projection
