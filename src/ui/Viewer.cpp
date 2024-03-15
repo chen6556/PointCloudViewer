@@ -121,6 +121,26 @@ void Viewer::mousePressEvent(QMouseEvent *event)
         _move = true;
         break;
     case Qt::MiddleButton:
+        if (event->modifiers() == Qt::KeyboardModifier::ControlModifier)
+        {
+            _FOV = 90.0f;
+            float v = std::tanf(PointCloud::PI / 4);
+            _ctm0[0] = _viewer_height / (_viewer_width * v);
+            _ctm0[5] = 1.0f / v;
+            makeCurrent();
+            glUniformMatrix4fv(_uniforms[1], 1, GL_TRUE, _ctm0); // projection
+            doneCurrent();
+        }
+        else
+        {
+            std::fill_n(_ctm1, 15, 0.0f);
+            _ctm1[0] = _ctm1[5] = _ctm1[10] = _ratio;
+            _ctm1[15] = 1.0f;
+            makeCurrent();
+            glUniformMatrix4fv(_uniforms[2], 1, GL_TRUE, _ctm1); // model
+            doneCurrent();
+        }
+        update();
         break;
     default:
         break;
@@ -152,6 +172,14 @@ void Viewer::mouseMoveEvent(QMouseEvent *event)
     {
         int y_dir = pos.x() > _pos.x() ? 1 : -1;
         int x_dir = pos.y() > _pos.y() ? 1 : -1;
+        if (std::abs(pos.x() - _pos.x()) > std::abs(pos.y() - _pos.y()))
+        {
+            x_dir = 0;
+        }
+        else
+        {
+            y_dir = 0;
+        }
         float mat_x[16] = { 1.0f, 0.0f, 0.0f, 0.0f,
             0.0f, std::cosf(x_dir * PointCloud::PI / 180), -std::sinf(x_dir * PointCloud::PI / 180), 0.0f,
             0.0f, std::sinf(x_dir * PointCloud::PI / 180), std::cosf(x_dir * PointCloud::PI / 180), 0.0f,
@@ -167,16 +195,16 @@ void Viewer::mouseMoveEvent(QMouseEvent *event)
     }
     else if (_move)
     {
-        float x_dir = pos.x() > _pos.x() ? 0.001f : -0.001f;
-        float y_dir = pos.y() < _pos.y() ? 0.001f : -0.001f;
-        // if (std::abs(pos.x() - _pos.x()) > std::abs(pos.y() - _pos.y()))
-        // {
-        //     y_dir = 0.0f;
-        // }
-        // else
-        // {
-        //     x_dir = 0.0f;
-        // }
+        float x_dir = pos.x() > _pos.x() ? 0.002f : -0.002f;
+        float y_dir = pos.y() < _pos.y() ? 0.002f : -0.002f;
+        if (std::abs(pos.x() - _pos.x()) > std::abs(pos.y() - _pos.y()))
+        {
+            y_dir = 0.0f;
+        }
+        else
+        {
+            x_dir = 0.0f;
+        }
         float mat0[16] = { 1.0f, 0.0f, 0.0f, x_dir,
                            0.0f, 1.0f, 0.0f, y_dir,
                            0.0f, 0.0f, 1.0f, 0.0f,
@@ -196,31 +224,57 @@ void Viewer::mouseMoveEvent(QMouseEvent *event)
 
 void Viewer::wheelEvent(QWheelEvent *event)
 {
-    float d;
+    float v;
     if (event->angleDelta().y() > 0)
     {
-        d = 1.25f;
-        _ratio *= 1.25;
-        _FOV *= 0.8;
+        v = 1.25f;
+        if (event->modifiers() == Qt::KeyboardModifier::ControlModifier)
+        {
+            _FOV *= 0.8;
+        }
+        else
+        {
+            _ratio *= 1.25;
+        }
     }
     else if (event->angleDelta().y() < 0)
     {
-        d = 0.8f;
-        _ratio *= 0.8;
-        _FOV *= 1.25;
+        v = 0.8f;
+        if (event->modifiers() == Qt::KeyboardModifier::ControlModifier)
+        {
+            _FOV *= 1.25;
+        }
+        else
+        {
+            _ratio *= 0.8;
+        }
     }
 
-    float mat[16] = {d, 0.0f, 0.0f, 0.0f,
-                    0.0f, d, 0.0f, 0.0f,
-                    0.0f, 0.0f, d, 0.0f,
+    if (event->modifiers() == Qt::KeyboardModifier::ControlModifier)
+    {
+        v = std::tanf(PointCloud::PI * _FOV / 360);
+        _ctm0[0] = _viewer_height / (_viewer_width * v);
+        _ctm0[5] = 1.0f / v;
+    }
+    else
+    {
+        float mat[16] = {v, 0.0f, 0.0f, 0.0f,
+                    0.0f, v, 0.0f, 0.0f,
+                    0.0f, 0.0f, v, 0.0f,
                     0.0f, 0.0f, 0.0f, 1.0f};
-    float output[16];
-    Utils::mul<4>(mat, _ctm1, output);
-    std::memmove(_ctm1, output, 16 * sizeof(float));
-
+        float output[16];
+        Utils::mul<4>(mat, _ctm1, output);
+        std::memmove(_ctm1, output, 16 * sizeof(float));
+    }
     makeCurrent();
-    // glUniformMatrix4fv(_uniforms[1], 1, GL_TRUE, _ctm0); // projection
-    glUniformMatrix4fv(_uniforms[2], 1, GL_TRUE, _ctm1); // model
+    if (event->modifiers() == Qt::KeyboardModifier::ControlModifier)
+    {
+        glUniformMatrix4fv(_uniforms[1], 1, GL_TRUE, _ctm0); // projection
+    }
+    else
+    {
+        glUniformMatrix4fv(_uniforms[2], 1, GL_TRUE, _ctm1); // model
+    }
     doneCurrent();
 
     update();

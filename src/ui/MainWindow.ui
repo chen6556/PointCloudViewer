@@ -65,16 +65,6 @@
    <addaction name="file_menu"/>
    <addaction name="menusetting"/>
   </widget>
-  <widget class="QStatusBar" name="statusBar">
-   <property name="font">
-    <font>
-     <pointsize>10</pointsize>
-    </font>
-   </property>
-   <property name="sizeGripEnabled">
-    <bool>false</bool>
-   </property>
-  </widget>
   <action name="open_file">
    <property name="text">
     <string>open</string>
