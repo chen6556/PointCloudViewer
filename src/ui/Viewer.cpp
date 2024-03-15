@@ -83,9 +83,6 @@ void Viewer::resizeGL(int w, int h)
     float v = std::tanf(PointCloud::PI * _FOV / 360);
     _ctm0[0] = h / (w * v);
     _ctm0[5] = 1.0f / v;
-    _ctm0[10] = -1.0f;
-    _ctm0[14] = -1.0f;
-    _ctm0[15] = 1.0f;
 
     glUniformMatrix4fv(_uniforms[1], 1, GL_TRUE, _ctm0); // projection
 
@@ -172,6 +169,14 @@ void Viewer::mouseMoveEvent(QMouseEvent *event)
     {
         float x_dir = pos.x() > _pos.x() ? 0.001f : -0.001f;
         float y_dir = pos.y() < _pos.y() ? 0.001f : -0.001f;
+        // if (std::abs(pos.x() - _pos.x()) > std::abs(pos.y() - _pos.y()))
+        // {
+        //     y_dir = 0.0f;
+        // }
+        // else
+        // {
+        //     x_dir = 0.0f;
+        // }
         float mat0[16] = { 1.0f, 0.0f, 0.0f, x_dir,
                            0.0f, 1.0f, 0.0f, y_dir,
                            0.0f, 0.0f, 1.0f, 0.0f,
@@ -191,26 +196,31 @@ void Viewer::mouseMoveEvent(QMouseEvent *event)
 
 void Viewer::wheelEvent(QWheelEvent *event)
 {
+    float d;
     if (event->angleDelta().y() > 0)
     {
+        d = 1.25f;
         _ratio *= 1.25;
         _FOV *= 0.8;
     }
     else if (event->angleDelta().y() < 0)
     {
+        d = 0.8f;
         _ratio *= 0.8;
         _FOV *= 1.25;
     }
 
-    float v = std::tanf(PointCloud::PI * _FOV / 360);
-    _ctm0[0] = _viewer_height / (_viewer_width * v);
-    _ctm0[5] = 1.0f / v;
-    _ctm0[10] = -1.0f;
-    _ctm0[14] = -1.0f;
-    _ctm0[15] = 1.0f;
+    float mat[16] = {d, 0.0f, 0.0f, 0.0f,
+                    0.0f, d, 0.0f, 0.0f,
+                    0.0f, 0.0f, d, 0.0f,
+                    0.0f, 0.0f, 0.0f, 1.0f};
+    float output[16];
+    Utils::mul<4>(mat, _ctm1, output);
+    std::memmove(_ctm1, output, 16 * sizeof(float));
 
     makeCurrent();
-    glUniformMatrix4fv(_uniforms[1], 1, GL_TRUE, _ctm0); // projection
+    // glUniformMatrix4fv(_uniforms[1], 1, GL_TRUE, _ctm0); // projection
+    glUniformMatrix4fv(_uniforms[2], 1, GL_TRUE, _ctm1); // model
     doneCurrent();
 
     update();
@@ -228,12 +238,6 @@ void Viewer::load_data(const PointCloud::PointCloud &pd)
     _surface_count = pd.surface.size();
     _edge_count = pd.edge.size();
     _pd_size = pd.size;
-
-    float v = std::tanf(PointCloud::PI * _FOV / 360);
-    _ctm0[0] = _viewer_height / (_viewer_width * v);
-    _ctm0[5] = 1.0f / v;
-    _ctm0[10] = -1.0f;
-    _ctm0[14] = -1.0f;
 
     makeCurrent();
 

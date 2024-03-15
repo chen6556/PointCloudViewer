@@ -1,5 +1,5 @@
 #include "io/PLYParser.hpp"
-#include "io/Parser.hpp"
+#include "io/Parser/ParserGen2.hpp"
 #include <sstream>
 
 
@@ -254,17 +254,17 @@ Action<std::string> element_a(&importer, &Importer::element);
 Action<int> element_count_a(&importer, &Importer::element_count);
 Action<std::string> proprety_name_a(&importer, &Importer::property_name);
 
-Parser<bool> type_name = str_p("char") | str_p("uchar") | str_p("short") | str_p("ushort")
+Parser<std::string> type_name = str_p("char") | str_p("uchar") | str_p("short") | str_p("ushort")
     | str_p("int") | str_p("uint") | str_p("float") | str_p("double");
-Parser<bool> property = str_p("property ") >> !str_p("list ") >> +(type_name >> ch_p(' '))
+Parser<std::string> property = str_p("property ") >> !str_p("list ") >> +(type_name >> ch_p(' '))
     >> ((+anychar_p())[proprety_name_a] - eol_p()) >> eol_p();
 Parser<bool> element = str_p("element ") >> ((+anychar_p())[element_a] - ch_p(' ')) >> ch_p(' ')
     >> int_p()[element_count_a] >> eol_p();
 Parser<bool> elements = +(element >> +property);
 
-Parser<bool> format = confix_p(str_p("format"), +anychar_p(), eol_p());
-Parser<bool> comment = confix_p(str_p("comment"), +anychar_p(), eol_p());
-Parser<bool> obj_info = confix_p(str_p("obj_info"), +anychar_p(), eol_p());
+Parser<std::string> format = confix_p(str_p("format"), +anychar_p(), eol_p());
+Parser<std::string> comment = confix_p(str_p("comment"), +anychar_p(), eol_p());
+Parser<std::string> obj_info = confix_p(str_p("obj_info"), +anychar_p(), eol_p());
 Parser<bool> head = str_p("ply") >> eol_p() >> +format >> *comment >> *obj_info
     >> elements >> str_p("end_header") >> eol_p();
 Parser<bool> data = (+(float_p()[value_a] >> !ch_p(' ')) >> eol_p())[data_a];

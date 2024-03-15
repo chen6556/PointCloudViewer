@@ -1,5 +1,5 @@
 #include "io/PCDParser.hpp"
-#include "io/Parser.hpp"
+#include "io/Parser/ParserGen2.hpp"
 
 
 namespace PCDParser
@@ -38,8 +38,8 @@ Action<double> coord_a(&importer, &Importer::coord);
 Action<double> color_a(&importer, &Importer::color);
 
 
-Parser<bool> annotation = confix_p(ch_p('#'), *anychar_p(), eol_p());
-Parser<bool> version = confix_p(str_p("PCD_VERSION"), *anychar_p(), eol_p());
+Parser<std::string> annotation = confix_p(ch_p('#'), *anychar_p(), eol_p());
+Parser<std::string> version = confix_p(str_p("PCD_VERSION"), *anychar_p(), eol_p());
 
 
 };
