@@ -2,6 +2,7 @@
 
 #include <fstream>
 #include <vector>
+#include "base/PointCloud.hpp"
 
 
 namespace PCDParser
@@ -10,25 +11,36 @@ namespace PCDParser
 class Importer
 {
 private:
+    enum DataType {X, Y, Z, R, G, B, RGB, Other};
+
+private:
     std::vector<float> _coords;
     std::vector<float> _colors;
 
-    float min_x, min_y, min_z, max_x, max_y, max_z;
+    float _min_x, _min_y, _min_z, _max_x, _max_y, _max_z;
+    PointCloud::PointCloud *_pd = nullptr;
+
+    std::vector<DataType> _data_type;
+    std::vector<float> _datas;
 
 public:
 
-    void coord(const double value);
+    void data(const double value);
 
-    void color(const double value);
+    void data();
+
+    void fields(const std::string &value);
     
 
     void end();
 
     void reset();
+
+    void bind_data(PointCloud::PointCloud &pd);
 };
 
 
-// bool parse(std::string_view &stream, float *graph);
+bool parse(std::string_view &stream, PointCloud::PointCloud &pd);
 
-// bool parse(std::ifstream &stream, float *graph);
+bool parse(std::ifstream &stream, PointCloud::PointCloud &pd);
 }

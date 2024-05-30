@@ -262,9 +262,9 @@ Parser<bool> element = str_p("element ") >> ((+anychar_p())[element_a] - ch_p(' 
     >> int_p()[element_count_a] >> eol_p();
 Parser<bool> elements = +(element >> +property);
 
-Parser<std::string> format = confix_p(str_p("format"), +anychar_p(), eol_p());
-Parser<std::string> comment = confix_p(str_p("comment"), +anychar_p(), eol_p());
-Parser<std::string> obj_info = confix_p(str_p("obj_info"), +anychar_p(), eol_p());
+Parser<std::string> format = confix_p(str_p("format"), eol_p());
+Parser<std::string> comment = confix_p(str_p("comment"), eol_p());
+Parser<std::string> obj_info = confix_p(str_p("obj_info"), eol_p());
 Parser<bool> head = str_p("ply") >> eol_p() >> +format >> *comment >> *obj_info
     >> elements >> str_p("end_header") >> eol_p();
 Parser<bool> data = (+(float_p()[value_a] >> !ch_p(' ')) >> eol_p())[data_a];
