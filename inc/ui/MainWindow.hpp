@@ -16,7 +16,6 @@ class MainWindow : public QMainWindow
 
 private:
     Ui::MainWindow *ui = nullptr;
-    Viewer *_viewer = nullptr;
 
 private:
     void init();

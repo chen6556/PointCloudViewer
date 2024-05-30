@@ -8,7 +8,7 @@
  
 
 MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent), ui(new Ui::MainWindow), _viewer(new Viewer(this))
+    : QMainWindow(parent), ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
     init();
@@ -21,13 +21,6 @@ MainWindow::~MainWindow()
 
 void MainWindow::init()
 {
-    setAcceptDrops(true);
-
-    ui->horizontalLayout->addWidget(_viewer);
-
-    QObject::connect(ui->actionshow_point, &QAction::triggered, _viewer, &Viewer::set_show_point);
-    QObject::connect(ui->actionshow_surface, &QAction::triggered, _viewer, &Viewer::set_show_surface);
-    QObject::connect(ui->actionshow_edge, &QAction::triggered, _viewer, &Viewer::set_show_edge);
 }
 
 
@@ -86,5 +79,5 @@ void MainWindow::open_file(const QString &path)
         file.close();
     }
 
-    _viewer->load_data(pd);
+    ui->viewer->load_data(pd);
 }

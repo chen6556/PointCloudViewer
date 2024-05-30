@@ -24,6 +24,9 @@
   <property name="focusPolicy">
    <enum>Qt::StrongFocus</enum>
   </property>
+  <property name="acceptDrops">
+   <bool>true</bool>
+  </property>
   <property name="windowTitle">
    <string>PointCloudViewer 0.0.1</string>
   </property>
@@ -37,7 +40,11 @@
    </size>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QHBoxLayout" name="horizontalLayout"/>
+   <layout class="QHBoxLayout" name="horizontalLayout">
+    <item>
+     <widget class="Viewer" name="viewer"/>
+    </item>
+   </layout>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
@@ -58,9 +65,9 @@
     <property name="title">
      <string>setting</string>
     </property>
-    <addaction name="actionshow_point"/>
-    <addaction name="actionshow_surface"/>
-    <addaction name="actionshow_edge"/>
+    <addaction name="show_point"/>
+    <addaction name="show_surface"/>
+    <addaction name="show_edge"/>
    </widget>
    <addaction name="file_menu"/>
    <addaction name="menusetting"/>
@@ -70,71 +77,7 @@
     <string>open</string>
    </property>
   </action>
-  <action name="save_file">
-   <property name="text">
-    <string>save</string>
-   </property>
-  </action>
-  <action name="saveas_file">
-   <property name="text">
-    <string>save as</string>
-   </property>
-  </action>
-  <action name="auto_save">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>auto save</string>
-   </property>
-  </action>
-  <action name="auto_layering">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="checked">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>auto layering</string>
-   </property>
-  </action>
-  <action name="remember_file_type">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="checked">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>remeber file type</string>
-   </property>
-  </action>
-  <action name="auto_aligning">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>auto aligning</string>
-   </property>
-  </action>
-  <action name="actionadvanced">
-   <property name="text">
-    <string>advanced</string>
-   </property>
-  </action>
-  <action name="show_origin">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="checked">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>show origin</string>
-   </property>
-  </action>
-  <action name="actionshow_point">
+  <action name="show_point">
    <property name="checkable">
     <bool>true</bool>
    </property>
@@ -145,7 +88,7 @@
     <string>show point</string>
    </property>
   </action>
-  <action name="actionshow_surface">
+  <action name="show_surface">
    <property name="checkable">
     <bool>true</bool>
    </property>
@@ -153,7 +96,7 @@
     <string>show surface</string>
    </property>
   </action>
-  <action name="actionshow_edge">
+  <action name="show_edge">
    <property name="checkable">
     <bool>true</bool>
    </property>
@@ -162,6 +105,18 @@
    </property>
   </action>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>Viewer</class>
+   <extends>QOpenGLWidget</extends>
+   <header location="global">ui/Viewer.hpp</header>
+   <slots>
+    <slot>set_show_point(bool)</slot>
+    <slot>set_show_surface(bool)</slot>
+    <slot>set_show_edge(bool)</slot>
+   </slots>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections>
   <connection>
@@ -177,6 +132,54 @@
     <hint type="destinationlabel">
      <x>599</x>
      <y>399</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>show_edge</sender>
+   <signal>triggered(bool)</signal>
+   <receiver>viewer</receiver>
+   <slot>set_show_edge(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>503</x>
+     <y>326</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>show_point</sender>
+   <signal>triggered(bool)</signal>
+   <receiver>viewer</receiver>
+   <slot>set_show_point(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>503</x>
+     <y>326</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>show_surface</sender>
+   <signal>triggered(bool)</signal>
+   <receiver>viewer</receiver>
+   <slot>set_show_surface(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>503</x>
+     <y>326</y>
     </hint>
    </hints>
   </connection>

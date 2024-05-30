@@ -19,8 +19,6 @@ void Viewer::init()
     format.setSamples(4);
     format.setProfile(QSurfaceFormat::CoreProfile);
     setFormat(format);
-
-    setAutoFillBackground(false);
 }
 
 void Viewer::initializeGL()
@@ -31,7 +29,7 @@ void Viewer::initializeGL()
     unsigned int vertex_shader;
     unsigned int fragment_shader;
 
-    // glPointSize(8.0f); // 点大小
+    glPointSize(2.0f); // 点大小
     glLineWidth(1.0f); // 线宽
     glEnable(GL_PRIMITIVE_RESTART_FIXED_INDEX);
     glEnable(GL_BLEND);
@@ -230,11 +228,15 @@ void Viewer::wheelEvent(QWheelEvent *event)
         v = 1.25f;
         if (event->modifiers() == Qt::KeyboardModifier::ControlModifier)
         {
-            _FOV *= 0.8;
+            _ratio *= 1.25;
         }
         else
         {
-            _ratio *= 1.25;
+            _FOV *= 0.8;
+            if (_FOV < 0.001)
+            {
+                _FOV = 0.001;
+            }
         }
     }
     else if (event->angleDelta().y() < 0)
@@ -242,21 +244,19 @@ void Viewer::wheelEvent(QWheelEvent *event)
         v = 0.8f;
         if (event->modifiers() == Qt::KeyboardModifier::ControlModifier)
         {
-            _FOV *= 1.25;
+            _ratio *= 0.8;
         }
         else
         {
-            _ratio *= 0.8;
+            _FOV *= 1.25;
+            if (_FOV > 180)
+            {
+                _FOV = 180;
+            }
         }
     }
 
     if (event->modifiers() == Qt::KeyboardModifier::ControlModifier)
-    {
-        v = std::tanf(PointCloud::PI * _FOV / 360);
-        _ctm0[0] = _viewer_height / (_viewer_width * v);
-        _ctm0[5] = 1.0f / v;
-    }
-    else
     {
         float mat[16] = {v, 0.0f, 0.0f, 0.0f,
                     0.0f, v, 0.0f, 0.0f,
@@ -266,14 +266,20 @@ void Viewer::wheelEvent(QWheelEvent *event)
         Utils::mul<4>(mat, _ctm1, output);
         std::memmove(_ctm1, output, 16 * sizeof(float));
     }
+    else
+    {
+        v = std::tanf(PointCloud::PI * _FOV / 360);
+        _ctm0[0] = _viewer_height / (_viewer_width * v);
+        _ctm0[5] = 1.0f / v;
+    }
     makeCurrent();
     if (event->modifiers() == Qt::KeyboardModifier::ControlModifier)
     {
-        glUniformMatrix4fv(_uniforms[1], 1, GL_TRUE, _ctm0); // projection
+        glUniformMatrix4fv(_uniforms[2], 1, GL_TRUE, _ctm1); // model
     }
     else
     {
-        glUniformMatrix4fv(_uniforms[2], 1, GL_TRUE, _ctm1); // model
+        glUniformMatrix4fv(_uniforms[1], 1, GL_TRUE, _ctm0); // projection
     }
     doneCurrent();
 
@@ -292,6 +298,7 @@ void Viewer::load_data(const PointCloud::PointCloud &pd)
     _surface_count = pd.surface.size();
     _edge_count = pd.edge.size();
     _pd_size = pd.size;
+    _FOV = std::atanf(_pd_size.len) * 270 / PointCloud::PI;
 
     makeCurrent();
 
@@ -309,6 +316,10 @@ void Viewer::load_data(const PointCloud::PointCloud &pd)
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _IBO[1]); // edge
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * pd.edge.size(), &pd.edge.front(), GL_STATIC_DRAW);
     }
+
+    float v = std::tanf(PointCloud::PI * _FOV / 360);
+    _ctm0[0] = _viewer_height / (_viewer_width * v);
+    _ctm0[5] = 1.0f / v;
 
     glUniform3f(_uniforms[0], _viewer_width / 2, _viewer_height / 2, 1.74 * _pd_size.len); // size
     glUniformMatrix4fv(_uniforms[1], 1, GL_TRUE, _ctm0); // projection
