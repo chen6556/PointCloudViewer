@@ -298,7 +298,23 @@ void Viewer::load_data(const PointCloud::PointCloud &pd)
     _surface_count = pd.surface.size();
     _edge_count = pd.edge.size();
     _pd_size = pd.size;
-    _FOV = std::atanf(_pd_size.len) * 270 / PointCloud::PI;
+    _FOV = std::atanf(std::min(_pd_size.len, 1.0f)) * 270 / PointCloud::PI;
+
+    float v = std::tanf(PointCloud::PI * _FOV / 360);
+    _ctm0[0] = _viewer_height / (_viewer_width * v);
+    _ctm0[5] = 1.0f / v;
+
+    if (_pd_size.len > 1.0f)
+    {
+        _ratio = _pd_size.len <= 1.0 ? 1.0f : 1.0f / _pd_size.len;
+        float mat[16] = {_ratio, 0.0f, 0.0f, 0.0f,
+                        0.0f, _ratio, 0.0f, 0.0f,
+                        0.0f, 0.0f, _ratio, 0.0f,
+                        0.0f, 0.0f, 0.0f, 1.0f};
+        float output[16];
+        Utils::mul<4>(mat, _ctm1, output);
+        std::memmove(_ctm1, output, 16 * sizeof(float));
+    }
 
     makeCurrent();
 
@@ -317,12 +333,9 @@ void Viewer::load_data(const PointCloud::PointCloud &pd)
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * pd.edge.size(), &pd.edge.front(), GL_STATIC_DRAW);
     }
 
-    float v = std::tanf(PointCloud::PI * _FOV / 360);
-    _ctm0[0] = _viewer_height / (_viewer_width * v);
-    _ctm0[5] = 1.0f / v;
-
     glUniform3f(_uniforms[0], _viewer_width / 2, _viewer_height / 2, 1.74 * _pd_size.len); // size
     glUniformMatrix4fv(_uniforms[1], 1, GL_TRUE, _ctm0); // projection
+    glUniformMatrix4fv(_uniforms[2], 1, GL_TRUE, _ctm1); // model
 
     doneCurrent();
 }
