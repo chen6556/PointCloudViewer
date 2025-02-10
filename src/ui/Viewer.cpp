@@ -44,18 +44,18 @@ void Viewer::initializeGL()
     glShaderSource(fragment_shader, 1, &GLSL::base_fss, NULL);
     glCompileShader(fragment_shader);
 
-    unsigned int shader_program = glCreateProgram();
-    glAttachShader(shader_program, vertex_shader);
-    glAttachShader(shader_program, fragment_shader);
-    glLinkProgram(shader_program);
+    _shader_program = glCreateProgram();
+    glAttachShader(_shader_program, vertex_shader);
+    glAttachShader(_shader_program, fragment_shader);
+    glLinkProgram(_shader_program);
     glDeleteShader(fragment_shader);
 
     glDeleteShader(vertex_shader);
-    _uniforms[0] = glGetUniformLocation(shader_program, "size");
-    _uniforms[1] = glGetUniformLocation(shader_program, "projection");
-    _uniforms[2] = glGetUniformLocation(shader_program, "model");
+    _uniforms[0] = glGetUniformLocation(_shader_program, "size");
+    _uniforms[1] = glGetUniformLocation(_shader_program, "projection");
+    _uniforms[2] = glGetUniformLocation(_shader_program, "model");
 
-    glUseProgram(shader_program);
+    glUseProgram(_shader_program);
     glUniformMatrix4fv(_uniforms[1], 1, GL_TRUE, _ctm0); // projection
     glUniformMatrix4fv(_uniforms[2], 1, GL_TRUE, _ctm1); // model
 
@@ -89,6 +89,7 @@ void Viewer::resizeGL(int w, int h)
 
 void Viewer::paintGL()
 {
+    glUseProgram(_shader_program);
     glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
     if (_show_point)

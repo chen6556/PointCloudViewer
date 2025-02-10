@@ -13,6 +13,7 @@ class Viewer : public QOpenGLWidget, protected QOpenGLFunctions_4_5_Core
 private:
     size_t _data_count = 0;
     int _uniforms[6];
+    unsigned int _shader_program;
     unsigned int _VAO, _VBO;
     unsigned int _IBO[2]; // surface edge
     size_t _surface_count = 0, _edge_count = 0;
