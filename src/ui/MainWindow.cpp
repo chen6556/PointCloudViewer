@@ -4,6 +4,7 @@
 #include <QMessageBox>
 #include <QMimeData>
 #include "io/PLYParser.hpp"
+#include "io/PCDParser.hpp"
 
  
 
@@ -72,10 +73,16 @@ void MainWindow::open_file(const QString &path)
 
     PointCloud::PointCloud pd;
 
-    if (path.endsWith(".ply") || path.endsWith(".PLY"))
+    if (path.toUpper().endsWith(".PLY"))
     {
         std::ifstream file(path.toLocal8Bit(), std::ios_base::in);
         PLYParser::parse(file, pd);
+        file.close();
+    }
+    else if (path.toUpper().endsWith(".PCD"))
+    {
+        std::ifstream file(path.toLocal8Bit(), std::ios_base::in);
+        PCDParser::parse(file, pd);
         file.close();
     }
 
